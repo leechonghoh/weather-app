@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>날씨 정보 앱</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>Weather Dashboard</h1>
+                <nav>
+                    <a href="favorites.html" class="nav-link">즐겨찾기</a>
+                    <span id="userMenu" class="nav-link user-menu" style="display: none;">
+                        <span id="userName"></span>
+                        <button id="logoutBtn" class="logout-btn" style="margin-left: 12px; background: none; border: none; color: inherit; cursor: pointer; font-size: 14px;">로그아웃</button>
+                    </span>
+                    <a href="login.html" id="loginLink" class="nav-link">로그인</a>
+                </nav>
+            </div>
+            <p class="header-subtitle">도시를 검색하여 실시간 날씨 정보를 확인하세요</p>
+        </header>
+
+        <div class="main-content">
+            <div class="search-container">
+            <div class="search-input-wrapper">
+                <input 
+                    type="text" 
+                    id="cityInput" 
+                    placeholder="도시 이름을 입력하세요 (예: 서울, New York, Tokyo)"
+                    autocomplete="off"
+                >
+                <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
+            </div>
+            <button id="searchBtn">검색</button>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <div id="weatherInfo" class="weather-info hidden">
+            <div class="weather-header">
+                <div class="city-header">
+                    <h2 id="cityName"></h2>
+                    <button id="favoriteBtn" class="favorite-btn" title="즐겨찾기">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </button>
+                </div>
+                <p id="date" class="weather-date"></p>
+            </div>
+
+            <div class="weather-main">
+                <div class="temperature">
+                    <span id="temp"></span>
+                    <span class="unit">°C</span>
+                </div>
+                <div class="weather-icon">
+                    <img id="weatherIcon" src="" alt="날씨 아이콘">
+                    <p id="description"></p>
+                </div>
+            </div>
+
+            <div class="weather-details">
+                <div class="detail-item">
+                    <span class="label">체감온도</span>
+                    <span class="value" id="feelsLike"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">습도</span>
+                    <span class="value" id="humidity"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">풍속</span>
+                    <span class="value" id="windSpeed"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">기압</span>
+                    <span class="value" id="pressure"></span>
+                </div>
+            </div>
+            <div class="weather-actions">
+                <button id="detailBtn" class="detail-btn">
+                    <span>일주일 날씨 예보</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>날씨 정보를 불러오는 중...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 일주일 날씨 상세보기 모달 -->
+    <div id="detailModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="detailCityName">일주일 날씨 예보</h2>
+                <div class="view-toggle-container">
+                    <button class="view-toggle-btn active" data-view="card" id="cardViewBtn">카드형</button>
+                    <button class="view-toggle-btn" data-view="graph" id="graphViewBtn">그래프형</button>
+                </div>
+                <button class="modal-close" id="closeModal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div id="detailLoading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>날씨 정보를 불러오는 중...</p>
+            </div>
+            <div id="detailContent" class="detail-content"></div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+    <script type="module">
+        import { getUserInfo, isAuthenticated, logout } from './js/auth.js';
+        
+        // 사용자 메뉴 표시
+        const userMenu = document.getElementById('userMenu');
+        const loginLink = document.getElementById('loginLink');
+        const userName = document.getElementById('userName');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        if (isAuthenticated()) {
+            const user = getUserInfo();
+            if (user) {
+                userName.textContent = user.name || user.email;
+                userMenu.style.display = 'inline-block';
+                loginLink.style.display = 'none';
+            }
+        } else {
+            userMenu.style.display = 'none';
+            loginLink.style.display = 'inline-block';
+        }
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                if (confirm('로그아웃하시겠습니까?')) {
+                    logout();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,41 @@
+# API Keys (보안)
+# script.js와 favorites.js에 실제 API 키가 포함되어 있으므로
+# 배포 시 주의하세요. 실제 배포 시에는 환경 변수나 백엔드 API를 사용하는 것을 권장합니다.
+
+# 환경 변수 파일
+.env
+.env.local
+.env.production
+.env.development
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node modules
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build files
+dist/
+build/
+*.min.js
+*.min.css
+
+# Vercel
+.vercel

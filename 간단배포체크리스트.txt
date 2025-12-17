@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 ==========================================
 배포 체크리스트 (간단 버전)
 ==========================================
@@ -11,11 +10,13 @@
 □ 2. GitHub에 코드 업로드
    → 새 저장소 만들기
    → 모든 파일 업로드
+   ⚠️ package.json에 merge conflict가 없어야 함!
 
 □ 3. Supabase 계정 만들기
    → https://supabase.com/
    → 새 프로젝트 생성
    → Project URL과 service_role key 복사
+   → "Enable email confirmations" 해제 (중요!)
 
 □ 4. OpenWeatherMap API 키 발급
    → https://openweathermap.org/api
@@ -39,51 +40,25 @@
    → 로그인 테스트
 
 ==========================================
-모두 완료하면 배포 성공!
+코드 수정 후 재배포 (중요!)
 ==========================================
 
-=======
-==========================================
-배포 체크리스트 (간단 버전)
-==========================================
+코드를 수정했다면:
 
-✅ 체크박스를 하나씩 확인하면서 진행하세요!
+□ 7. GitHub Desktop에서 커밋
+   → "Summary"에 설명 입력
+   → "Commit to main" 클릭
 
-□ 1. GitHub 계정 만들기
-   → https://github.com/
+□ 8. GitHub에 푸시
+   → "Push origin" 버튼 클릭
 
-□ 2. GitHub에 코드 업로드
-   → 새 저장소 만들기
-   → 모든 파일 업로드
+□ 9. Vercel 자동 배포 확인
+   → Vercel 대시보드 → "Deployments"
+   → 새 배포가 자동으로 시작됨
+   → "Ready" 상태가 되면 완료!
 
-□ 3. Supabase 계정 만들기
-   → https://supabase.com/
-   → 새 프로젝트 생성
-   → Project URL과 service_role key 복사
-
-□ 4. OpenWeatherMap API 키 발급
-   → https://openweathermap.org/api
-   → 계정 만들기
-   → API 키 복사
-
-□ 5. Vercel에 배포
-   → https://vercel.com/
-   → GitHub로 로그인
-   → 프로젝트 가져오기
-   → 환경 변수 3개 설정:
-     * SUPABASE_URL
-     * SUPABASE_SERVICE_KEY
-     * OPENWEATHER_API_KEY
-   → Deploy 클릭
-
-□ 6. 배포 완료 확인
-   → 사이트 접속
-   → 날씨 조회 테스트
-   → 회원가입 테스트
-   → 로그인 테스트
+자세한 내용: "코드변경후배포방법.txt" 참고
 
 ==========================================
 모두 완료하면 배포 성공!
 ==========================================
-
->>>>>>> Stashed changes

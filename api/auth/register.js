@@ -50,6 +50,10 @@ export default async function handler(req, res) {
 
     // 회원가입
     // ⚠️ 중요: Supabase 설정에서 "Enable email confirmations"를 비활성화해야 합니다
+    console.log('Attempting to sign up user:', email);
+    console.log('Supabase URL:', supabaseUrl);
+    console.log('Service key present:', !!supabaseServiceKey);
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -61,8 +65,17 @@ export default async function handler(req, res) {
       },
     });
 
+    console.log('SignUp response:', {
+      hasUser: !!data?.user,
+      hasSession: !!data?.session,
+      hasError: !!error,
+      errorMessage: error?.message
+    });
+
     if (error) {
       console.error('Registration error:', error);
+      console.error('Error code:', error.status);
+      console.error('Error message:', error.message);
       
       // Supabase 에러 메시지 처리
       if (error.message.includes('already registered') || 
@@ -85,6 +98,13 @@ export default async function handler(req, res) {
     // 사용자 정보 반환
     // 이메일 확인이 비활성화되어 있으면 세션이 생성됨
     if (data.user) {
+      console.log('User created successfully:', {
+        id: data.user.id,
+        email: data.user.email,
+        emailConfirmed: data.user.email_confirmed_at ? 'Yes' : 'No',
+        hasSession: !!data.session
+      });
+      
       return res.status(201).json({
         user: {
           id: data.user.id,
@@ -97,6 +117,7 @@ export default async function handler(req, res) {
           ? '회원가입이 완료되었습니다.' 
           : '회원가입이 완료되었습니다. Supabase 설정에서 이메일 확인을 비활성화하세요.',
         requiresEmailConfirmation: !data.session,
+        supabaseUserId: data.user.id, // 디버깅용
       });
     }
 

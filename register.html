@@ -237,14 +237,38 @@
             registerBtn.disabled = true;
             registerBtn.textContent = '회원가입 중...';
             
+            // 로딩 상태 표시
+            console.log('=== 회원가입 시작 ===');
+            console.log('이메일:', email);
+            console.log('이름:', name || '(없음)');
+            console.log('현재 URL:', window.location.href);
+            
             try {
                 console.log('Starting registration...');
+                const startTime = Date.now();
+                
                 const result = await register(email, password, name || undefined);
+                
+                const endTime = Date.now();
                 console.log('Registration successful:', result);
-                alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
-                window.location.href = '/login.html';
+                console.log('소요 시간:', endTime - startTime, 'ms');
+                console.log('사용자 ID:', result.user?.id);
+                console.log('토큰:', result.token ? '있음' : '없음');
+                
+                // 성공 메시지 표시
+                showError(''); // 에러 메시지 초기화
+                alert(`회원가입이 완료되었습니다!\n\n사용자 ID: ${result.user?.id || 'N/A'}\n이메일: ${result.user?.email}\n\nSupabase에서 확인하세요: Authentication > Users`);
+                
+                // 로그인 페이지로 이동
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 1000);
+                
             } catch (error) {
-                console.error('Registration error:', error);
+                console.error('=== 회원가입 오류 ===');
+                console.error('Error type:', error.constructor.name);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
                 console.error('Error details:', {
                     message: error.message,
                     stack: error.stack,
@@ -262,7 +286,7 @@
                 
                 // 줄바꿈을 <br>로 변환
                 errorMsg = errorMsg.replace(/\n/g, '<br>');
-                errorMessage.innerHTML = errorMsg;
+                showError(errorMsg);
                 registerBtn.disabled = false;
                 registerBtn.textContent = '회원가입';
             }

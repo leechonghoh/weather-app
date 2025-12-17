@@ -41,12 +41,24 @@ export default async function handler(req, res) {
     const response = await fetch(url);
 
     if (!response.ok) {
+      let errorMessage = '날씨 정보를 가져오는데 실패했습니다.';
+      
+      // OpenWeatherMap API의 에러 응답 파싱 시도
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (parseError) {
+        // JSON 파싱 실패 시 기본 메시지 사용
+      }
+      
       if (response.status === 404) {
         return res.status(404).json({ error: '도시를 찾을 수 없습니다.' });
       } else if (response.status === 401) {
         return res.status(500).json({ error: 'API 키 오류입니다.' });
       } else {
-        return res.status(response.status).json({ error: '날씨 정보를 가져오는데 실패했습니다.' });
+        return res.status(response.status).json({ error: errorMessage });
       }
     }
 

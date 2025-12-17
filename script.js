@@ -57,16 +57,40 @@ async function getWeather(city) {
         );
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: '알 수 없는 오류' }));
-            throw new Error(errorData.error || '날씨 정보를 가져오는데 실패했습니다.');
+            let errorMessage = '날씨 정보를 가져오는데 실패했습니다.';
+            
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (parseError) {
+                // JSON 파싱 실패 시 상태 코드에 따른 메시지
+                if (response.status === 404) {
+                    errorMessage = '도시를 찾을 수 없습니다.';
+                } else if (response.status === 500) {
+                    errorMessage = '서버 오류가 발생했습니다.';
+                } else if (response.status === 400) {
+                    errorMessage = '잘못된 요청입니다.';
+                } else {
+                    errorMessage = `오류가 발생했습니다. (상태 코드: ${response.status})`;
+                }
+            }
+            
+            throw new Error(errorMessage);
         }
 
-        const data = await response.json();
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            throw new Error('서버 응답을 처리할 수 없습니다.');
+        }
 
         // 날씨 정보 표시
         displayWeather(data);
 
     } catch (error) {
+        console.error('Weather fetch error:', error);
         showError(error.message);
         hideLoading();
     }
@@ -86,11 +110,32 @@ async function getWeatherByCoords(lat, lon) {
         );
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: '알 수 없는 오류' }));
-            throw new Error(errorData.error || '날씨 정보를 가져오는데 실패했습니다.');
+            let errorMessage = '위치 기반 날씨 정보를 가져오는데 실패했습니다.';
+            
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (parseError) {
+                // JSON 파싱 실패 시 상태 코드에 따른 메시지
+                if (response.status === 404) {
+                    errorMessage = '해당 위치의 날씨 정보를 찾을 수 없습니다.';
+                } else if (response.status === 500) {
+                    errorMessage = '서버 오류가 발생했습니다.';
+                } else {
+                    errorMessage = `오류가 발생했습니다. (상태 코드: ${response.status})`;
+                }
+            }
+            
+            throw new Error(errorMessage);
         }
 
-        const data = await response.json();
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            throw new Error('서버 응답을 처리할 수 없습니다.');
+        }
 
         // 날씨 정보 표시
         displayWeather(data);
@@ -99,6 +144,10 @@ async function getWeatherByCoords(lat, lon) {
         // 위치 기반 날씨 조회 실패는 조용히 처리 (에러 메시지 표시 안 함)
         console.error('Location weather fetch error:', error);
         hideLoading();
+        // 위치 기반 조회 실패 시 날씨 정보 숨김 상태 유지
+        hideWeatherInfo();
+    } finally {
+        isLocationWeatherLoading = false;
     }
 }
 
@@ -800,24 +849,33 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// 위치 조회 중인지 추적하는 플래그
+let isLocationWeatherLoading = false;
+
 // 사용자 위치 가져오기 및 날씨 자동 로드
 function getCurrentLocationWeather() {
     if (!navigator.geolocation) {
         console.log('Geolocation is not supported by this browser.');
         hideLoading();
+        isLocationWeatherLoading = false;
         return;
     }
+
+    isLocationWeatherLoading = true;
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-            getWeatherByCoords(lat, lon);
+            getWeatherByCoords(lat, lon).finally(() => {
+                isLocationWeatherLoading = false;
+            });
         },
         (error) => {
             // 위치 정보를 가져올 수 없는 경우 조용히 처리
             console.log('Location access denied or unavailable:', error.message);
             hideLoading();
+            isLocationWeatherLoading = false;
         },
         {
             enableHighAccuracy: false,
@@ -836,6 +894,7 @@ window.addEventListener('load', () => {
         getCurrentLocationWeather();
     } else {
         hideLoading();
+        isLocationWeatherLoading = false;
     }
 });
 

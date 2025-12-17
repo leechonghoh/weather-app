@@ -52,16 +52,25 @@ async function getWeather(city) {
         hideWeatherInfo();
 
         // 백엔드 API 호출
-        const response = await fetch(
-            `${API_BASE_URL}/api/weather?q=${encodeURIComponent(city)}`
-        );
+        const apiUrl = `${API_BASE_URL}/api/weather?q=${encodeURIComponent(city)}`;
+        console.log('Fetching weather for:', city);
+        console.log('API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl);
 
         if (!response.ok) {
             let errorMessage = '날씨 정보를 가져오는데 실패했습니다.';
+            let errorDetails = null;
             
             try {
                 const errorData = await response.json();
                 errorMessage = errorData.error || errorMessage;
+                errorDetails = errorData.details;
+                
+                // API 키 오류인 경우 더 명확한 메시지
+                if (errorMessage.includes('API 키') || errorMessage.includes('API key')) {
+                    errorMessage = 'API 키 오류입니다. 서버 설정을 확인해주세요.';
+                }
             } catch (parseError) {
                 // JSON 파싱 실패 시 상태 코드에 따른 메시지
                 if (response.status === 404) {
@@ -70,10 +79,20 @@ async function getWeather(city) {
                     errorMessage = '서버 오류가 발생했습니다.';
                 } else if (response.status === 400) {
                     errorMessage = '잘못된 요청입니다.';
+                } else if (response.status === 401) {
+                    errorMessage = 'API 키 오류입니다.';
+                } else if (response.status === 429) {
+                    errorMessage = 'API 호출 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
                 } else {
                     errorMessage = `오류가 발생했습니다. (상태 코드: ${response.status})`;
                 }
             }
+            
+            console.error('Weather API error:', {
+                status: response.status,
+                message: errorMessage,
+                details: errorDetails
+            });
             
             throw new Error(errorMessage);
         }

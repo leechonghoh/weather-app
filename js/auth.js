@@ -53,9 +53,15 @@ export async function apiCall(endpoint, options = {}) {
     
     try {
         const url = `${API_BASE_URL}${endpoint}`;
-        console.log('API call:', url, config);
+        console.log('API call:', url);
+        console.log('API_BASE_URL:', API_BASE_URL);
+        console.log('Endpoint:', endpoint);
+        console.log('Method:', config.method || 'GET');
         
         const response = await fetch(url, config);
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
         
         // Content-Type 확인
         const contentType = response.headers.get('content-type');
@@ -64,18 +70,19 @@ export async function apiCall(endpoint, options = {}) {
         if (!isJson) {
             // JSON이 아닌 경우 (HTML 에러 페이지 등)
             const text = await response.text();
-            console.error('Non-JSON response:', text.substring(0, 200));
+            console.error('Non-JSON response:', text.substring(0, 500));
             
             if (response.status === 404) {
-                throw new Error('API 엔드포인트를 찾을 수 없습니다. 서버 설정을 확인해주세요.');
+                throw new Error(`API 엔드포인트를 찾을 수 없습니다. (${url})\n\n가능한 원인:\n1. Vercel에 배포되지 않았습니다\n2. API 라우팅이 설정되지 않았습니다\n3. vercel.json 파일을 확인하세요`);
             } else if (response.status >= 500) {
-                throw new Error('서버 오류가 발생했습니다. 서버 로그를 확인해주세요.');
+                throw new Error(`서버 오류가 발생했습니다. (상태 코드: ${response.status})\n\nVercel 로그를 확인하세요.`);
             } else {
-                throw new Error(`서버 응답 오류 (상태 코드: ${response.status})`);
+                throw new Error(`서버 응답 오류 (상태 코드: ${response.status})\n\n응답: ${text.substring(0, 100)}`);
             }
         }
         
         const data = await response.json();
+        console.log('Response data:', data);
         
         if (!response.ok) {
             throw new Error(data.error || '요청에 실패했습니다.');
@@ -84,13 +91,26 @@ export async function apiCall(endpoint, options = {}) {
         return data;
     } catch (error) {
         console.error('API call error:', error);
+        console.error('Error type:', error.constructor.name);
+        console.error('Error message:', error.message);
+        
+        // 네트워크 오류 (fetch 실패)
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            throw new Error(`네트워크 오류: API 서버에 연결할 수 없습니다.\n\nURL: ${API_BASE_URL}${endpoint}\n\n가능한 원인:\n1. 인터넷 연결을 확인하세요\n2. Vercel에 배포되었는지 확인하세요\n3. 브라우저 콘솔(F12)에서 자세한 오류를 확인하세요`);
+        }
         
         // JSON 파싱 오류인 경우 더 명확한 메시지
         if (error instanceof SyntaxError && error.message.includes('JSON')) {
-            throw new Error('서버 응답을 처리할 수 없습니다. API 엔드포인트가 올바른지 확인해주세요.');
+            throw new Error(`서버 응답을 처리할 수 없습니다.\n\nAPI 엔드포인트: ${API_BASE_URL}${endpoint}\n\n가능한 원인:\n1. API가 HTML 페이지를 반환하고 있습니다\n2. Vercel 배포가 완료되지 않았습니다\n3. vercel.json 설정을 확인하세요`);
         }
         
-        throw error;
+        // 이미 Error 객체인 경우 그대로 전달
+        if (error instanceof Error) {
+            throw error;
+        }
+        
+        // 기타 오류
+        throw new Error(error.message || '알 수 없는 오류가 발생했습니다.');
     }
 }
 

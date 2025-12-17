@@ -44,9 +44,12 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: '서버 설정 오류입니다.' });
     }
 
+    // Supabase 클라이언트 생성
+    // service_role key를 사용하면 이메일 확인을 우회할 수 있음
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 회원가입
+    // ⚠️ 중요: Supabase 설정에서 "Enable email confirmations"를 비활성화해야 합니다
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -54,7 +57,7 @@ export default async function handler(req, res) {
         data: {
           name: name || email.split('@')[0],
         },
-        emailRedirectTo: undefined, // 이메일 확인 비활성화 (필요시 설정)
+        // 이메일 확인이 비활성화되어 있으면 세션이 바로 생성됨
       },
     });
 
@@ -62,7 +65,10 @@ export default async function handler(req, res) {
       console.error('Registration error:', error);
       
       // Supabase 에러 메시지 처리
-      if (error.message.includes('already registered') || error.message.includes('already exists') || error.message.includes('User already registered')) {
+      if (error.message.includes('already registered') || 
+          error.message.includes('already exists') || 
+          error.message.includes('User already registered') ||
+          error.message.includes('already been registered')) {
         return res.status(409).json({ error: '이미 등록된 이메일입니다.' });
       }
       
@@ -70,21 +76,34 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: '비밀번호 형식이 올바르지 않습니다.' });
       }
       
-      return res.status(500).json({ error: error.message || '회원가입 중 오류가 발생했습니다.' });
+      return res.status(500).json({ 
+        error: error.message || '회원가입 중 오류가 발생했습니다.',
+        hint: 'Supabase 설정에서 이메일 확인을 비활성화했는지 확인하세요.'
+      });
     }
 
     // 사용자 정보 반환
-    // Supabase는 기본적으로 이메일 확인이 필요하므로 세션이 없을 수 있음
-    return res.status(201).json({
-      user: {
-        id: data.user?.id || null,
-        email: data.user?.email || email,
-        name: data.user?.user_metadata?.name || name || email.split('@')[0],
-      },
-      token: data.session?.access_token || null,
-      refresh_token: data.session?.refresh_token || null,
-      message: data.session ? '회원가입이 완료되었습니다.' : '회원가입이 완료되었습니다. 이메일을 확인해주세요.',
-      requiresEmailConfirmation: !data.session,
+    // 이메일 확인이 비활성화되어 있으면 세션이 생성됨
+    if (data.user) {
+      return res.status(201).json({
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.name || name || email.split('@')[0],
+        },
+        token: data.session?.access_token || null,
+        refresh_token: data.session?.refresh_token || null,
+        message: data.session 
+          ? '회원가입이 완료되었습니다.' 
+          : '회원가입이 완료되었습니다. Supabase 설정에서 이메일 확인을 비활성화하세요.',
+        requiresEmailConfirmation: !data.session,
+      });
+    }
+
+    // 예상치 못한 경우
+    return res.status(500).json({ 
+      error: '회원가입 중 오류가 발생했습니다.',
+      hint: 'Supabase 설정을 확인하세요.'
     });
   } catch (error) {
     console.error('Unexpected error:', error);

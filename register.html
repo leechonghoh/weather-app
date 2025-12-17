@@ -254,13 +254,15 @@
                 let errorMsg = error.message || '회원가입에 실패했습니다.';
                 
                 // 더 구체적인 에러 메시지
-                if (errorMsg.includes('API 엔드포인트')) {
-                    errorMsg = '서버 연결 오류입니다. API 서버가 실행 중인지 확인해주세요.';
+                if (errorMsg.includes('API 엔드포인트') || errorMsg.includes('네트워크 오류') || errorMsg.includes('연결할 수 없습니다')) {
+                    errorMsg = '서버 연결 오류입니다.\n\n확인사항:\n1. Vercel에 배포되었는지 확인\n2. 올바른 URL로 접속했는지 확인 (로컬 파일 아님)\n3. 브라우저 콘솔(F12)에서 자세한 오류 확인\n4. API연결문제해결.txt 파일 참고';
                 } else if (errorMsg.includes('서버 응답')) {
-                    errorMsg = '서버 응답 오류입니다. 서버 로그를 확인해주세요.';
+                    errorMsg = '서버 응답 오류입니다.\n\nVercel 함수 로그를 확인하세요.';
                 }
                 
-                showError(errorMsg);
+                // 줄바꿈을 <br>로 변환
+                errorMsg = errorMsg.replace(/\n/g, '<br>');
+                errorMessage.innerHTML = errorMsg;
                 registerBtn.disabled = false;
                 registerBtn.textContent = '회원가입';
             }

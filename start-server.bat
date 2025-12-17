@@ -1,32 +1,45 @@
 @echo off
+echo ============================================================
 echo Weather Dashboard 서버 시작 중...
+echo ============================================================
 echo.
 
 REM Python이 설치되어 있는지 확인
 python --version >nul 2>&1
 if %errorlevel% == 0 (
-    echo Python이 발견되었습니다. Python 서버를 시작합니다...
-    python server.py
+    echo [OK] Python이 발견되었습니다.
+    echo [INFO] API 기능이 포함된 서버를 시작합니다...
+    echo.
+    python server_with_api.py
     goto :end
 )
 
-REM Node.js가 설치되어 있는지 확인
-node --version >nul 2>&1
+REM Python3 확인
+python3 --version >nul 2>&1
 if %errorlevel% == 0 (
-    echo Node.js가 발견되었습니다. Node.js 서버를 시작합니다...
-    node server.js
+    echo [OK] Python 3가 발견되었습니다.
+    echo [INFO] API 기능이 포함된 서버를 시작합니다...
+    echo.
+    python3 server_with_api.py
     goto :end
 )
 
-echo 오류: Python 또는 Node.js가 설치되어 있지 않습니다.
+echo [오류] Python이 설치되어 있지 않습니다.
 echo.
-echo 다음 중 하나를 설치해주세요:
-echo 1. Python 3: https://www.python.org/downloads/
-echo 2. Node.js: https://nodejs.org/
+echo ============================================================
+echo 해결 방법:
+echo ============================================================
 echo.
-echo 또는 index.html 파일을 직접 브라우저로 여는 것을 권장하지 않습니다.
-echo (CORS 오류가 발생할 수 있습니다)
+echo 1. Python 설치:
+echo    - https://www.python.org/downloads/ 접속
+echo    - "Download Python" 버튼 클릭
+echo    - 설치 시 "Add Python to PATH" 체크 필수!
 echo.
+echo 2. 설치 후:
+echo    - 이 파일(start-server.bat)을 다시 실행하세요
+echo    - 또는 PowerShell에서: python server_with_api.py
+echo.
+echo ============================================================
 pause
 :end
 

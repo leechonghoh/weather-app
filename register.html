@@ -238,11 +238,29 @@
             registerBtn.textContent = '회원가입 중...';
             
             try {
-                await register(email, password, name || undefined);
+                console.log('Starting registration...');
+                const result = await register(email, password, name || undefined);
+                console.log('Registration successful:', result);
                 alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
                 window.location.href = '/login.html';
             } catch (error) {
-                showError(error.message || '회원가입에 실패했습니다.');
+                console.error('Registration error:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
+                
+                let errorMsg = error.message || '회원가입에 실패했습니다.';
+                
+                // 더 구체적인 에러 메시지
+                if (errorMsg.includes('API 엔드포인트')) {
+                    errorMsg = '서버 연결 오류입니다. API 서버가 실행 중인지 확인해주세요.';
+                } else if (errorMsg.includes('서버 응답')) {
+                    errorMsg = '서버 응답 오류입니다. 서버 로그를 확인해주세요.';
+                }
+                
+                showError(errorMsg);
                 registerBtn.disabled = false;
                 registerBtn.textContent = '회원가입';
             }

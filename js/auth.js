@@ -52,7 +52,29 @@ export async function apiCall(endpoint, options = {}) {
     };
     
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+        const url = `${API_BASE_URL}${endpoint}`;
+        console.log('API call:', url, config);
+        
+        const response = await fetch(url, config);
+        
+        // Content-Type 확인
+        const contentType = response.headers.get('content-type');
+        const isJson = contentType && contentType.includes('application/json');
+        
+        if (!isJson) {
+            // JSON이 아닌 경우 (HTML 에러 페이지 등)
+            const text = await response.text();
+            console.error('Non-JSON response:', text.substring(0, 200));
+            
+            if (response.status === 404) {
+                throw new Error('API 엔드포인트를 찾을 수 없습니다. 서버 설정을 확인해주세요.');
+            } else if (response.status >= 500) {
+                throw new Error('서버 오류가 발생했습니다. 서버 로그를 확인해주세요.');
+            } else {
+                throw new Error(`서버 응답 오류 (상태 코드: ${response.status})`);
+            }
+        }
+        
         const data = await response.json();
         
         if (!response.ok) {
@@ -62,6 +84,12 @@ export async function apiCall(endpoint, options = {}) {
         return data;
     } catch (error) {
         console.error('API call error:', error);
+        
+        // JSON 파싱 오류인 경우 더 명확한 메시지
+        if (error instanceof SyntaxError && error.message.includes('JSON')) {
+            throw new Error('서버 응답을 처리할 수 없습니다. API 엔드포인트가 올바른지 확인해주세요.');
+        }
+        
         throw error;
     }
 }

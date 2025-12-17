@@ -1,0 +1,112 @@
+==========================================
+긴급 해결: Functions 목록이 비어있음
+==========================================
+
+Functions 목록에 아무것도 없다 = API 파일이 GitHub에 없음!
+
+==========================================
+즉시 확인할 사항
+==========================================
+
+1. GitHub 저장소 접속
+   - https://github.com/your-username/weather-app
+   - (또는 GitHub Desktop에서 저장소 열기)
+
+2. "api" 폴더가 보이는가?
+   - 보이지 않는다면 → 문제 확인!
+   - 보인다면 → api/auth/register.js 파일 확인
+
+3. "vercel.json" 파일이 루트에 있는가?
+
+==========================================
+해결 방법 (단계별)
+==========================================
+
+1단계: GitHub Desktop 열기
+   - GitHub Desktop 실행
+   - weather-app 프로젝트 선택
+
+2단계: 파일 확인
+   - 좌측 파일 목록에서:
+     □ api 폴더가 보이는가?
+     □ vercel.json이 보이는가?
+   
+   - 파일 옆에 "M" (Modified) 또는 "?" (Untracked) 표시가 있다면:
+     → 파일이 GitHub에 업로드되지 않았음!
+
+3단계: 모든 파일 추가
+   - 모든 파일 선택 (Ctrl+A)
+   - 또는 "Changes" 탭에서:
+     * "api" 폴더 전체 선택
+     * "vercel.json" 선택
+     * 기타 수정된 파일들 선택
+
+4단계: 커밋
+   - 하단 "Summary"에 입력:
+     "API 파일 및 vercel.json 추가"
+   - "Commit to main" 클릭
+
+5단계: 푸시
+   - 상단 "Push origin" 버튼 클릭
+   - 완료 메시지 확인
+
+6단계: Vercel 재배포
+   - Vercel 대시보드 접속
+   - 프로젝트 → "Deployments"
+   - 최신 배포 옆 "..." 메뉴
+   - "Redeploy" 클릭
+   - ⚠️ "Use existing Build Cache" 체크 해제
+   - "Redeploy" 클릭
+   - 배포 완료 대기 (2-3분)
+
+7단계: Functions 목록 확인
+   - Vercel → "Settings" → "Functions"
+   - 다음 함수들이 나타나는지 확인:
+     * api/auth/register
+     * api/auth/login
+     * api/weather
+     * api/forecast
+
+==========================================
+GitHub 웹사이트에서 직접 확인
+==========================================
+
+1. GitHub 저장소 페이지 접속
+2. 파일 목록에서 확인:
+   - "api" 폴더가 있는가?
+   - "vercel.json" 파일이 있는가?
+
+없다면:
+   - GitHub Desktop에서 푸시 필요
+   - 또는 GitHub 웹사이트에서 직접 업로드:
+     * "Add file" → "Upload files"
+     * api 폴더 전체 드래그 앤 드롭
+     * "Commit changes" 클릭
+
+==========================================
+빠른 체크리스트
+==========================================
+
+□ GitHub Desktop 실행
+□ api 폴더가 파일 목록에 보이는가?
+□ vercel.json이 파일 목록에 보이는가?
+□ 모든 파일 커밋했는가?
+□ GitHub에 푸시했는가?
+□ Vercel에서 재배포했는가?
+□ Functions 목록에 함수가 나타났는가?
+
+==========================================
+여전히 작동하지 않는다면
+==========================================
+
+1. GitHub 저장소 URL 확인
+2. Vercel 프로젝트 설정:
+   - "Settings" → "Git"
+   - 연결된 저장소가 올바른지 확인
+3. 새 배포 생성:
+   - "Deployments" → "Create Deployment"
+   - GitHub 브랜치 선택
+   - "Deploy" 클릭
+
+==========================================
+

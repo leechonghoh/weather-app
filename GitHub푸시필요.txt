@@ -1,0 +1,64 @@
+==========================================
+GitHub 푸시 필요 - 지금 바로 해야 할 일
+==========================================
+
+✅ 좋은 소식: api 폴더의 파일들은 이미 Git에 추가되어 있습니다!
+
+하지만 vercel.json이 수정되었으므로 커밋하고 푸시해야 합니다.
+
+==========================================
+지금 바로 해야 할 일
+==========================================
+
+1. GitHub Desktop 열기
+2. 변경사항 확인:
+   - vercel.json (수정됨)
+   - Vercel404오류해결.txt (새 파일)
+   - 기타 새 가이드 파일들
+
+3. 커밋:
+   - 하단 "Summary"에 입력:
+     "vercel.json 수정 및 API 라우팅 개선"
+   - "Commit to main" 클릭
+
+4. 푸시:
+   - 상단 "Push origin" 버튼 클릭
+   - 완료 메시지 확인
+
+5. Vercel 재배포:
+   - Vercel → "Deployments"
+   - 최신 배포 옆 "..." 메뉴
+   - "Redeploy" 클릭
+   - ⚠️ "Use existing Build Cache" 체크 해제
+   - "Redeploy" 클릭
+
+6. Functions 목록 확인:
+   - Vercel → "Settings" → "Functions"
+   - api/auth/register 등 함수들이 나타나는지 확인
+
+==========================================
+GitHub에서 확인
+==========================================
+
+푸시 후 GitHub 저장소에서 확인:
+
+1. https://github.com/your-username/weather-app 접속
+2. "api" 폴더 클릭
+3. 다음 파일들이 있는지 확인:
+   □ api/auth/register.js
+   □ api/auth/login.js
+   □ api/weather.js
+   □ api/forecast.js
+   □ api/favorites/index.js
+   □ api/favorites/[id].js
+
+4. 루트에 "vercel.json" 파일이 있는지 확인
+
+==========================================
+완료!
+==========================================
+
+푸시 후 Vercel에서 재배포하면 Functions 목록에 API 함수들이 나타날 것입니다!
+
+==========================================
+

@@ -1,0 +1,94 @@
+==========================================
+지금 바로 해야 할 일 (단계별)
+==========================================
+
+현재 상태:
+✅ 커밋할 변경사항이 있습니다!
+- vercel.json (수정됨)
+- Vercel404오류해결.txt (새 파일)
+
+하지만 GitHub Desktop이 표시하지 않고 있습니다.
+
+==========================================
+방법 1: PowerShell에서 직접 커밋 (가장 확실함)
+==========================================
+
+1. PowerShell 열기 (Windows 키 + X → Windows PowerShell)
+
+2. 프로젝트 폴더로 이동:
+   cd c:\projects\weather-app
+
+3. 현재 상태 확인:
+   git status
+
+4. 모든 변경사항 추가:
+   git add .
+
+5. 커밋:
+   git commit -m "vercel.json 수정 및 API 라우팅 개선"
+
+6. 푸시:
+   git push origin main
+
+7. 완료 확인:
+   - GitHub 웹사이트 접속
+   - https://github.com/leechonghoh/weather-app
+   - "api" 폴더와 "vercel.json" 파일 확인
+
+==========================================
+방법 2: GitHub Desktop 새로고침
+==========================================
+
+1. GitHub Desktop에서:
+   - "Repository" 메뉴 → "Refresh" (또는 F5)
+   - 또는 "Repository" → "Show in Explorer" 클릭
+
+2. 그래도 안 보이면:
+   - GitHub Desktop 종료 후 재실행
+   - 또는 방법 1 사용
+
+==========================================
+방법 3: GitHub 웹사이트에서 직접 확인
+==========================================
+
+1. https://github.com/leechonghoh/weather-app 접속
+
+2. 다음을 확인:
+   □ "api" 폴더가 있는가?
+   □ "api/auth/register.js" 파일이 있는가?
+   □ 루트에 "vercel.json" 파일이 있는가?
+
+3. 없다면:
+   → 방법 1로 PowerShell에서 커밋 및 푸시
+
+==========================================
+Vercel 재배포 (커밋 후)
+==========================================
+
+1. Vercel 대시보드 접속
+2. 프로젝트 → "Deployments"
+3. 최신 배포 옆 "..." 메뉴
+4. "Redeploy" 클릭
+5. ⚠️ "Use existing Build Cache" 체크 해제
+6. "Redeploy" 클릭
+7. 배포 완료 대기 (2-3분)
+
+==========================================
+Functions 목록 확인
+==========================================
+
+1. Vercel → "Settings" → "Functions"
+2. 다음 함수들이 나타나는지 확인:
+   - api/auth/register
+   - api/auth/login
+   - api/weather
+   - api/forecast
+
+==========================================
+완료!
+==========================================
+
+커밋 및 푸시 후 Vercel에서 재배포하면 Functions 목록에 API 함수들이 나타날 것입니다!
+
+==========================================
+

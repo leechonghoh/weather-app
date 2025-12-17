@@ -39,6 +39,11 @@ export default async function handler(req, res) {
     }
 
     // Supabase 클라이언트 생성
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration missing');
+      return res.status(500).json({ error: '서버 설정 오류입니다.' });
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 회원가입
@@ -49,29 +54,37 @@ export default async function handler(req, res) {
         data: {
           name: name || email.split('@')[0],
         },
+        emailRedirectTo: undefined, // 이메일 확인 비활성화 (필요시 설정)
       },
     });
 
     if (error) {
       console.error('Registration error:', error);
       
-      if (error.message.includes('already registered')) {
+      // Supabase 에러 메시지 처리
+      if (error.message.includes('already registered') || error.message.includes('already exists') || error.message.includes('User already registered')) {
         return res.status(409).json({ error: '이미 등록된 이메일입니다.' });
       }
       
-      return res.status(500).json({ error: '회원가입 중 오류가 발생했습니다.' });
+      if (error.message.includes('Password')) {
+        return res.status(400).json({ error: '비밀번호 형식이 올바르지 않습니다.' });
+      }
+      
+      return res.status(500).json({ error: error.message || '회원가입 중 오류가 발생했습니다.' });
     }
 
     // 사용자 정보 반환
+    // Supabase는 기본적으로 이메일 확인이 필요하므로 세션이 없을 수 있음
     return res.status(201).json({
       user: {
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.user_metadata?.name || email.split('@')[0],
+        id: data.user?.id || null,
+        email: data.user?.email || email,
+        name: data.user?.user_metadata?.name || name || email.split('@')[0],
       },
       token: data.session?.access_token || null,
       refresh_token: data.session?.refresh_token || null,
-      message: '회원가입이 완료되었습니다.',
+      message: data.session ? '회원가입이 완료되었습니다.' : '회원가입이 완료되었습니다. 이메일을 확인해주세요.',
+      requiresEmailConfirmation: !data.session,
     });
   } catch (error) {
     console.error('Unexpected error:', error);

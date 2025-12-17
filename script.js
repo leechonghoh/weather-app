@@ -72,6 +72,36 @@ async function getWeather(city) {
     }
 }
 
+// 좌표로 날씨 정보 가져오기
+async function getWeatherByCoords(lat, lon) {
+    try {
+        // 로딩 표시
+        showLoading();
+        hideError();
+        hideWeatherInfo();
+
+        // 백엔드 API 호출
+        const response = await fetch(
+            `${API_BASE_URL}/api/weather?lat=${lat}&lon=${lon}`
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: '알 수 없는 오류' }));
+            throw new Error(errorData.error || '날씨 정보를 가져오는데 실패했습니다.');
+        }
+
+        const data = await response.json();
+
+        // 날씨 정보 표시
+        displayWeather(data);
+
+    } catch (error) {
+        // 위치 기반 날씨 조회 실패는 조용히 처리 (에러 메시지 표시 안 함)
+        console.error('Location weather fetch error:', error);
+        hideLoading();
+    }
+}
+
 // 날씨 정보 화면에 표시
 function displayWeather(data) {
     hideLoading();
@@ -80,7 +110,9 @@ function displayWeather(data) {
     currentCityData = {
         name: data.name,
         country: data.sys.country,
-        query: `${data.name},${data.sys.country}` // 검색용 키
+        query: `${data.name},${data.sys.country}`, // 검색용 키
+        lat: data.coord?.lat,
+        lon: data.coord?.lon
     };
 
     // 도시 이름
@@ -198,11 +230,11 @@ function removeFromFavorites(cityName, country) {
     saveFavorites(filtered);
 }
 
-async function updateFavoriteButton() {
+function updateFavoriteButton() {
     if (!currentCityData || !favoriteBtn) return;
     
     try {
-        const isFav = await isFavorite(currentCityData.name, currentCityData.country);
+        const isFav = isFavorite(currentCityData.name, currentCityData.country);
         
         const svgIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -370,26 +402,20 @@ if (favoriteBtn) {
         if (!currentCityData) return;
 
         try {
-            const isFav = await isFavorite(currentCityData.name, currentCityData.country);
+            const isFav = isFavorite(currentCityData.name, currentCityData.country);
             
             if (isFav) {
                 // 즐겨찾기에서 제거
-                const favorites = await getFavorites();
-                const favorite = favorites.find(fav => 
-                    fav.city_name === currentCityData.name && fav.country === currentCityData.country
-                );
-                if (favorite) {
-                    await removeFromFavorites(favorite.id);
-                }
+                removeFromFavorites(currentCityData.name, currentCityData.country);
             } else {
                 // 즐겨찾기에 추가
-                await addToFavorites(
+                addToFavorites(
                     currentCityData.name, 
                     currentCityData.country, 
                     currentCityData.query
                 );
             }
-            await updateFavoriteButton();
+            updateFavoriteButton();
         } catch (error) {
             showError(error.message || '즐겨찾기 작업에 실패했습니다.');
         }
@@ -402,9 +428,16 @@ async function getForecast(cityQuery) {
         detailLoading.classList.remove('hidden');
         detailContent.innerHTML = '';
 
-        const response = await fetch(
-            `${API_BASE_URL}/api/forecast?q=${encodeURIComponent(cityQuery)}`
-        );
+        let url;
+        // cityQuery가 좌표 형식인지 확인 (lat,lon)
+        if (cityQuery.includes(',') && !isNaN(parseFloat(cityQuery.split(',')[0]))) {
+            const [lat, lon] = cityQuery.split(',');
+            url = `${API_BASE_URL}/api/forecast?lat=${lat}&lon=${lon}`;
+        } else {
+            url = `${API_BASE_URL}/api/forecast?q=${encodeURIComponent(cityQuery)}`;
+        }
+
+        const response = await fetch(url);
 
         if (!response.ok) {
             throw new Error('일주일 날씨 정보를 가져올 수 없습니다.');
@@ -700,7 +733,13 @@ function addGraphTooltips(allDataPoints, maxTemp, minTemp, tempRange, graphWidth
 function openDetailModal() {
     if (!currentCityData) return;
     detailModal.classList.remove('hidden');
-    getForecast(currentCityData.query);
+    
+    // 좌표가 있으면 좌표로, 없으면 도시 이름으로 조회
+    if (currentCityData.lat && currentCityData.lon) {
+        getForecast(`${currentCityData.lat},${currentCityData.lon}`);
+    } else {
+        getForecast(currentCityData.query);
+    }
 }
 
 function closeDetailModal() {
@@ -761,8 +800,42 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// 페이지 로드 시 포커스 설정
+// 사용자 위치 가져오기 및 날씨 자동 로드
+function getCurrentLocationWeather() {
+    if (!navigator.geolocation) {
+        console.log('Geolocation is not supported by this browser.');
+        hideLoading();
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            getWeatherByCoords(lat, lon);
+        },
+        (error) => {
+            // 위치 정보를 가져올 수 없는 경우 조용히 처리
+            console.log('Location access denied or unavailable:', error.message);
+            hideLoading();
+        },
+        {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 300000 // 5분 캐시
+        }
+    );
+}
+
+// 페이지 로드 시 포커스 설정 및 위치 기반 날씨 로드
 window.addEventListener('load', () => {
     cityInput.focus();
+    
+    // 현재 도시 데이터가 없으면 위치 기반 날씨 자동 로드
+    if (!currentCityData) {
+        getCurrentLocationWeather();
+    } else {
+        hideLoading();
+    }
 });
 

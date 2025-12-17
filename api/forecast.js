@@ -14,10 +14,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { q } = req.query;
+  const { q, lat, lon } = req.query;
 
-  if (!q) {
-    return res.status(400).json({ error: '도시 이름을 입력해주세요.' });
+  // 도시 이름 또는 좌표 중 하나는 필수
+  if (!q && (!lat || !lon)) {
+    return res.status(400).json({ error: '도시 이름 또는 좌표를 입력해주세요.' });
   }
 
   const apiKey = process.env.OPENWEATHER_API_KEY;
@@ -28,7 +29,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(q)}&appid=${apiKey}&units=metric&lang=kr`;
+    let url;
+    // 좌표로 조회하는 경우
+    if (lat && lon) {
+      url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`;
+    } else {
+      // 도시 이름으로 조회하는 경우
+      url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(q)}&appid=${apiKey}&units=metric&lang=kr`;
+    }
     
     const response = await fetch(url);
 

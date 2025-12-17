@@ -28,6 +28,11 @@ export default async function handler(req, res) {
     }
 
     // Supabase 클라이언트 생성
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase configuration missing');
+      return res.status(500).json({ error: '서버 설정 오류입니다.' });
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 로그인
@@ -39,11 +44,20 @@ export default async function handler(req, res) {
     if (error) {
       console.error('Login error:', error);
       
-      if (error.message.includes('Invalid login credentials')) {
+      if (error.message.includes('Invalid login credentials') || error.message.includes('Invalid credentials')) {
         return res.status(401).json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' });
       }
       
-      return res.status(500).json({ error: '로그인 중 오류가 발생했습니다.' });
+      if (error.message.includes('Email not confirmed') || error.message.includes('email')) {
+        return res.status(403).json({ error: '이메일 인증이 완료되지 않았습니다. 이메일을 확인해주세요.' });
+      }
+      
+      return res.status(500).json({ error: error.message || '로그인 중 오류가 발생했습니다.' });
+    }
+
+    // 세션이 없는 경우 처리
+    if (!data.session) {
+      return res.status(401).json({ error: '세션을 생성할 수 없습니다.' });
     }
 
     // 사용자 정보 반환
